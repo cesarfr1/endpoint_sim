@@ -1,4 +1,3 @@
-Readme
 Create a .env file using the .env_sample as example.
 Bring up the container with `docker compose up` command
 There are a couple of endpoint available, refer to the python code.
