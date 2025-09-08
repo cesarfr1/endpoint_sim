@@ -1,0 +1,7 @@
+prometheus-client
+flask[async]
+flask-sock
+requests
+psutil
+numpy
+splunk-opentelemetry[all]

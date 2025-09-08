@@ -1,0 +1,27 @@
+services:
+  app:
+    build: ./
+    environment:
+      OTEL_SERVICE_NAME: "py-endpoint-simulator"
+      OTEL_RESOURCE_ATTRIBUTES: deployment.environment=cf-lab,service.version=1
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://collector:4317"      
+      SPLUNK_AUTOMATIC_LOG_COLLECTION: "true"
+      OTEL_METRIC_EXPORT_INTERVAL: "10000"
+      # OTEL_LOG_LEVEL: "verbose"
+      SPLUNK_METRICS_ENABLED: true // enabled via app code
+    ports:
+      - "8080:8080"
+
+  collector:
+    image: quay.io/signalfx/splunk-otel-collector:0.134.0
+    container_name: collector
+    command: [ "--config=/etc/otel-collector-config.yml" ]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
+    environment:
+      SPLUNK_REALM: ${SPLUNK_REALM}
+      SPLUNK_ACCESS_TOKEN: ${SPLUNK_ACCESS_TOKEN}
+      SPLUNK_HEC_URL: ${SPLUNK_HEC_URL}
+      SPLUNK_HEC_TOKEN: ${SPLUNK_HEC_TOKEN}
+      
