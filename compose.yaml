@@ -12,7 +12,6 @@ services:
       SPLUNK_METRICS_ENABLED: true // enabled via app code
     ports:
       - "8080:8080"
-
   collector:
     image: quay.io/signalfx/splunk-otel-collector:0.134.0
     container_name: collector
