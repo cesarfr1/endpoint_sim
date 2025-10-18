@@ -1,4 +1,4 @@
-FROM python:3.9.23-trixie
+FROM python:3.9.23-slim-trixie
 WORKDIR /code
 COPY ./client/requirements.txt .
 COPY ./client/app_client.py .

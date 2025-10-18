@@ -10,6 +10,7 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 import time
 import requests
 from opentelemetry import metrics
+from opentelemetry import trace 
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
         OTLPMetricExporter,
@@ -19,6 +20,7 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
 )
 
+tracer = trace.get_tracer("__name__")
 metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter())
 provider = MeterProvider(metric_readers=[metric_reader])
 # Sets the global default meter provider
@@ -58,20 +60,21 @@ logger = logging.getLogger('werkzeug')
 
 @app.route('/')
 def hello():
-    start_time = time.time()
-    REQUEST_COUNT.labels('GET', '/', 200).inc()
+    with tracer.start_as_current_span("cf-/") as span:
+        start_time = time.time()
+        REQUEST_COUNT.labels('GET', '/', 200).inc()
     # getting a counter  metric via Otel native
-    cf_request_count.add(1, {
-        "method": request.method,
-        "endpoint": request.endpoint,
-    });
-    template = render_template('index.html')
-    REQUEST_LATENCY.labels('GET', '/').observe(time.time() - start_time)
+        cf_request_count.add(1, {
+            "method": request.method,
+            "endpoint": request.endpoint,
+        });
+        template = render_template('index.html')
+        REQUEST_LATENCY.labels('GET', '/').observe(time.time() - start_time)
     # getting a histogram  metric via Otel native
-    cf_request_latency.record((time.time() - start_time), {
-        "method": request.method,
-        "endpoint": request.endpoint})
-    return template
+        cf_request_latency.record((time.time() - start_time), {
+            "method": request.method,
+            "endpoint": request.endpoint})
+        return template
 
 
 @app.route('/health')
@@ -105,8 +108,11 @@ def submit():
     cf_request_latency.record((time.time() - start_time), {
         "method": request.method,
         "endpoint": request.endpoint})
+    with tracer.start_as_current_span(
+        "cf-submit", 
+        ):
 
-    return {"status": "received", "data": data}, 201
+        return {"status": "received", "data": data}, 201
 
 
 @app.route('/resource/<int:id>', methods=['DELETE'])
