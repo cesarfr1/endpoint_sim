@@ -1,8 +1,3 @@
-# networks:
-#   default:
-#     name: py-app
-#     driver: bridge
-
 services:
   server:
     container_name: server
