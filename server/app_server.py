@@ -112,7 +112,8 @@ def submit():
         "cf-submit", 
         ):
 
-        return {"status": "received", "data": data}, 201
+        return {"cf_body": data}, 201
+        # app.logger.info(f"Payload value: {data}")
 
 
 @app.route('/resource/<int:id>', methods=['DELETE'])

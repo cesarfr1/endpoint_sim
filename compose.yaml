@@ -5,6 +5,7 @@
 
 services:
   server:
+    container_name: server
     build: 
       dockerfile: server/Dockerfile
     environment:
@@ -18,9 +19,21 @@ services:
       SPLUNK_METRICS_ENABLED: true // enabled via app code
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health').read()"]
+      interval: 5s
+      timeout: 1s
+      retries: 3
+      start_period: 5s
+      start_interval: 5s
   client:
+    container_name: client
     build:
       dockerfile: client/Dockerfile
+    depends_on:
+      server:
+        condition: service_healthy
+      
     environment:
       OTEL_SERVICE_NAME: "py-endpoint-simulator-client"
       OTEL_RESOURCE_ATTRIBUTES: deployment.environment=cf-lab,service.version=1
@@ -43,4 +56,5 @@ services:
       SPLUNK_ACCESS_TOKEN: ${SPLUNK_ACCESS_TOKEN}
       SPLUNK_HEC_URL: ${SPLUNK_HEC_URL}
       SPLUNK_HEC_TOKEN: ${SPLUNK_HEC_TOKEN}
+      SPLUNK_INGEST_URL: "https://ingest.eu2.signalfx.com"
       
